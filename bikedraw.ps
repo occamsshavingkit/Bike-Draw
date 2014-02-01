@@ -1,0 +1,1170 @@
+
+% Math Functions
+/asin{
+    /hypot exch def
+    /xside exch def
+    hypot dup mul
+    xside dup mul
+    sub
+    sqrt
+    xside atan
+} def
+/acos {
+    /hypot exch def
+    /yside exch def
+    hypot dup mul
+    yside dup mul
+    sub sqrt
+    yside exch atan
+} def
+/tan { dup sin exch cos div } def
+/findIntersection {
+% leaves x, y of intersection on stack
+    /angle1 exch def
+    /y1 exch def
+    /x1 exch def
+    /angle2 exch def
+    /y2 exch def
+    /x2 exch def
+    /m1 angle1 tan def
+    /m2 angle2 tan def
+    /b1 y1 m1 x1 mul sub def
+    /b2 y2 m2 x2 mul sub def
+    b2 b1 sub m1 m2 sub div
+    m1 b2 mul m2 b1 mul sub m1 m2 sub div
+} def
+/lengthBetweenPoints {
+    /y2 exch def
+    /x2 exch def
+    /y1 exch def
+    /x1 exch def
+    x1 x2 sub dup mul
+    y1 y2 sub dup mul
+    add
+    sqrt
+} def
+/midpoint {
+    /y1 exch def
+    /x1 exch def
+    /y2 exch def
+    /x2 exch def
+    x1 x2 add 2 div
+    y1 y2 add 2 div
+} def 
+/nearestDecimal { %Rounds "places" spaces after decimal
+    /places exch 10 exch exp def
+    /number exch def
+    places number mul round
+    places div
+} def
+/angleOfLineBetweenPoints {
+    /y2 exch def
+    /x2 exch def
+    /y1 exch def
+    /x1 exch def
+    y2 y1 sub x2 x1 sub atan
+} def
+
+/concatstrings { % [ (a) (b) ... ] -> (ab...)
+    0 1 index { length add } forall string
+    0 3 2 roll
+    { 	3 copy putinterval
+	length add
+    }
+    forall
+    pop
+} bind def 
+
+%Draw Centered Perpendicular Line
+/centPerpLine {
+    /angle exch def
+    /lineLength exch def
+    /y exch def
+    /x exch def
+    gsave
+    newpath
+    /startx x angle sin lineLength mul add def
+    /starty y angle cos lineLength mul add def
+    /endx startx dup x sub 2 mul sub def
+    /endy starty dup y sub 2 mul sub def
+    startx starty moveto
+    endx endy lineto
+    stroke
+    grestore
+} def 
+
+%Move a distance up an angled line, leave the coordinates on the stack
+/moveUpLine {
+    /distance exch def
+    /angle exch def
+    /starty exch def
+    /startx exch def
+    startx distance angle cos mul add
+    starty distance angle sin mul add
+} def
+
+%% Calculated Dimensions
+%% If you're changing these, think why you're doing it.
+% Normalize the angles w/r to postscript's 0 degrees
+/seatTubeLength seatTubeLengthCC seatTubeExtension add def
+/seatTubeAngleN 180 seatTubeAngle sub def
+/headTubeAngleN 180 headTubeAngle sub def
+% Radii for convenience
+/seatTubeRadius seatTubeDiameter 2 div def
+/topTubeRadius topTubeDiameter 2 div def
+/headTubeRadius headTubeDiameter 2 div def
+/downTubeRadius downTubeDiameter 2 div def
+/frontBSR frontBSD 2 div def
+/frontWheelDiameter frontBSD frontTireWidth 2 mul add def
+/frontWheelRadius frontWheelDiameter 2 div def
+/rearBSR rearBSD 2 div def
+/rearWheelDiameter rearBSD rearTireWidth 2 mul add def
+/rearWheelRadius rearWheelDiameter 2 div def
+/forkTrail frontWheelRadius headTubeAngle cos mul forkRake sub headTubeAngle sin div def
+/topTubeAngleAtHeadTube headTubeAngle topTubeAngle add def
+/topTubeAngleAtSeatTube seatTubeAngle topTubeAngle add def
+/actualTopTubeLength effTopTubeLength 180 topTubeAngleAtSeatTube sub sin div seatTubeAngle sin mul def  
+/BBcenter { 0 bottomBracketDrop neg } def 
+/eTTSTx seatTubeLengthCC seatTubeAngleN cos mul def
+/eTTSTy seatTubeLengthCC seatTubeAngleN sin mul bottomBracketDrop sub def
+/eTTST { eTTSTx eTTSTy } def
+/seatTubeTop {
+    seatTubeLength seatTubeAngleN cos mul
+    seatTubeLength seatTubeAngleN sin mul bottomBracketDrop sub
+} def
+/TTHTx eTTSTx effTopTubeLength add def
+/TTHTy eTTSTy def
+/TTHT { TTHTx TTHTy } def
+/wheelDiameterDifference rearWheelDiameter frontWheelDiameter sub def
+/wheelRadiusDifference rearWheelRadius frontWheelRadius sub def
+/steerColumnAxisIntersectionx TTHT wheelRadiusDifference add headTubeAngle tan div add def
+/steerColumnAxisIntersection { steerColumnAxisIntersectionx wheelRadiusDifference neg} def
+/frontAxelx steerColumnAxisIntersectionx forkRake headTubeAngle sin div add def
+/frontAxel { frontAxelx wheelRadiusDifference neg } def
+/forkRakeCorner { frontAxel headTubeAngleN 90 add forkRake moveUpLine } def
+/steerColumnLengthInWheel frontWheelRadius dup mul forkRake dup mul sub sqrt forkRakeCorner steerColumnAxisIntersection lengthBetweenPoints sub def
+/steerColumnLengthToCrown steerColumnLengthInWheel tireClearance forkCrownThickness add add def
+/steerColumnLengthToHeadset steerColumnLengthInWheel tireClearance forkCrownThickness lowerHeadsetStack add add add def
+/lowerHeadsetCLy steerColumnLengthToCrown headTubeAngle sin mul wheelRadiusDifference sub def
+/lowerHeadsetCLx steerColumnAxisIntersectionx steerColumnLengthToCrown headTubeAngle cos mul sub def
+/lowerHeadsetCL { lowerHeadsetCLx lowerHeadsetCLy } def
+/headTubeBottomy steerColumnLengthToHeadset headTubeAngle sin mul wheelRadiusDifference sub def
+/headTubeBottomx steerColumnAxisIntersectionx steerColumnLengthToHeadset headTubeAngle cos mul sub def
+/headTubeBottom { headTubeBottomx headTubeBottomy } def
+/forkLength lowerHeadsetCL frontAxel lengthBetweenPoints def
+/HTDTLowIntersect {
+    headTubeBottom headTubeAngleN 90 add headTubeRadius moveUpLine
+    headTubeAngleN headTubeDownTubeOffset moveUpLine
+} def
+/HTDTLItoBB HTDTLowIntersect BBcenter lengthBetweenPoints def
+/downTubeAngle
+BBcenter HTDTLowIntersect angleOfLineBetweenPoints
+downTubeRadius HTDTLItoBB
+acos
+add
+def
+/HTDTLugAngle 180 downTubeAngle sub headTubeAngle sub def
+steerColumnAxisIntersection headTubeAngleN BBcenter downTubeAngle findIntersection
+/HTDTy exch def
+/HTDTx exch def
+/HTDT { HTDTx HTDTy } def
+/headTubeLength 
+    headTubeBottom TTHT lengthBetweenPoints
+    headTubeTopTubeOffset
+    % next line adds the bit that expands to center line
+    headTubeRadius headTubeAngle topTubeAngle add tan div add
+    add
+    topTubeRadius headTubeAngleN topTubeAngle sub sin div add
+def
+/headTubeTop { headTubeBottom headTubeAngleN headTubeLength moveUpLine } def
+/downTubeLength HTDTx dup mul HTDTy bottomBracketDrop add dup mul add sqrt def
+/chainStayIntersection { chainStayLength dup mul bottomBracketDrop dup mul sub sqrt neg 0 } def
+/rearAxel { chainStayLength dup mul bottomBracketDrop dup mul sub sqrt neg 0 } def
+/bottomBracketDiameter {
+    lugged 
+        { 35 mm }
+        { 38 mm }
+    ifelse
+} def
+/bottomBracketRadius bottomBracketDiameter 2 div def
+
+/downTubeMiterPoint {
+BBcenter downTubeAngle bottomBracketRadius moveUpLine downTubeAngle 90 sub downTubeRadius moveUpLine
+} def
+
+% Placement
+/axelLineHeight bottomBracketDrop bottomBracketRadius add 1.5 inch add def
+/chainstayDiagramPlacement 2384 rearDropoutSpacing 2 div sub 1.5 inch sub axelLineHeight sub def
+/textOffset 2 mm def
+
+%%Let's Start Drawing!
+
+TTHT topTubeAngle actualTopTubeLength neg moveUpLine
+/TTSTy exch def
+/TTSTx exch def
+/TTST { TTSTx TTSTy } def
+
+/drawTubeCL {
+/extraLine exch def
+/y2 exch def
+/x2 exch def
+/y1 exch def
+/x1 exch def
+/lineAngle x1 y1 x2 y2 angleOfLineBetweenPoints def
+x1 y1 lineAngle extraLine moveUpLine moveto
+x2 y2 lineAngle extraLine neg moveUpLine lineto
+} def
+
+
+/drawTubeEdges {
+/extraLine exch def
+/tubeAngle exch def
+/tubeLength exch def
+/tubeRadius exch def
+/tubeBasey exch def
+/tubeBasex exch def
+tubeBasex tubeBasey tubeAngle 90 sub tubeRadius moveUpLine
+tubeAngle extraLine neg moveUpLine moveto
+currentpoint
+tubeAngle extraLine 2 mul tubeLength add moveUpLine lineto
+
+tubeBasex tubeBasey tubeAngle 90 sub tubeRadius neg moveUpLine
+tubeAngle extraLine neg moveUpLine moveto
+currentpoint
+tubeAngle extraLine 2 mul tubeLength add moveUpLine lineto
+} def
+
+drawingOffset axelLineHeight translate
+
+% Draw Guide Lines
+/guideLineOverage 2 cm def
+newpath
+0 1 1 setrgbcolor
+0.125 mm setlinewidth
+% Axel line
+-5000 0 5000 0 moveto lineto stroke
+0 0 0 moveto
+BBcenter lineto
+% Seat Tube
+BBcenter seatTubeTop guideLineOverage neg drawTubeCL
+BBcenter seatTubeRadius seatTubeLength seatTubeAngleN guideLineOverage drawTubeEdges
+% eff Top Tube
+eTTSTx guideLineOverage sub eTTSTy moveto
+TTHTx guideLineOverage add eTTSTy lineto
+% real Top Tube
+TTST TTHT guideLineOverage neg drawTubeCL
+TTST topTubeRadius actualTopTubeLength topTubeAngle guideLineOverage drawTubeEdges
+% Head Tube
+headTubeBottom headTubeTop guideLineOverage neg drawTubeCL
+headTubeBottom headTubeRadius headTubeLength headTubeAngleN guideLineOverage drawTubeEdges
+% Down Tube
+HTDT BBcenter guideLineOverage neg drawTubeCL
+HTDT downTubeRadius downTubeLength downTubeAngle 180 add guideLineOverage drawTubeEdges
+stroke
+lugged {
+    % BB to eff Top Tube Vert Line
+    BBcenter eTTST exch pop 0 exch guideLineOverage neg drawTubeCL
+}
+{
+    % Head Tube bottom to BB Vert Line
+    BBcenter exch pop headTubeBottom pop exch headTubeBottom guideLineOverage neg drawTubeCL
+    BBcenter headTubeBottom pop bottomBracketDrop neg guideLineOverage neg drawTubeCL
+    BBcenter downTubeAngle bottomBracketRadius moveUpLine tickLength 180 downTubeAngle sub centPerpLine
+} ifelse
+% Seat Tube Miter Line
+BBcenter seatTubeAngleN bottomBracketRadius moveUpLine tickLength 180 seatTubeAngleN sub centPerpLine
+% Steering Column
+headTubeBottom forkRakeCorner guideLineOverage neg drawTubeCL
+% Fork Rake
+forkRakeCorner frontAxel guideLineOverage neg drawTubeCL
+stroke
+% Circles at axels
+frontAxel 3 8 div inch 2 div 0 360 arc
+stroke
+chainStayIntersection 3 8 div inch 2 div 0 360 arc
+stroke
+% Chainstay Diagram
+/BBchainstayD { 0 chainstayDiagramPlacement } def
+/rearAxelChainstayD { chainStayLength neg chainstayDiagramPlacement } def
+newpath
+% Draw BB center line
+BBchainstayD moveto
+0 bottomBracketWidth neg 2 div guideLineOverage sub rmoveto
+0 bottomBracketWidth guideLineOverage 2 mul add rlineto
+% Draw BB rectangle
+BBchainstayD moveto
+bottomBracketRadius bottomBracketWidth 2 div rmoveto
+bottomBracketDiameter neg 0 rlineto
+0 bottomBracketWidth neg rlineto
+bottomBracketDiameter 0 rlineto
+closepath
+stroke
+% Draw rear axel
+newpath
+rearAxelChainstayD moveto
+0 rearDropoutSpacing guideLineOverage add 2 div neg rmoveto
+% Draw dropout insides
+0 guideLineOverage 2 div rlineto
+tickLength neg 0 rmoveto
+tickLength 2 mul 0 rlineto
+tickLength neg 0 rmoveto
+0 rearDropoutSpacing guideLineOverage 2 div add rlineto
+0 guideLineOverage 2 div neg rlineto
+tickLength neg 0 rmoveto
+tickLength 2 mul 0 rlineto
+tickLength neg 0 rmoveto
+% Draw line between axel and BB
+rearAxelChainstayD BBchainstayD guideLineOverage neg drawTubeCL
+% Draw the tire
+rearAxelChainstayD exch rearBSR add rearTireWidth 2 div add exch rearTireWidth 2 div 0 360 arc
+stroke
+
+% Legend
+newpath
+0 setgray
+5 mm setlinewidth
+-470 mm axelLineHeight neg 2 inch add moveto
+0 1 3 {
+    0.125 inch 0 rlineto
+    0.125 inch 0 rmoveto
+} for
+0 1 1 {
+    0.25 inch 0 rlineto
+    0.25 inch 0 rmoveto
+} for
+0.5 inch 0 rlineto
+0.5 inch 0 rmoveto
+1 inch 0 rlineto
+-470 mm axelLineHeight neg 2 inch add -5 mm add moveto
+0 1 4 {
+    1 mm 0 rlineto
+    1 mm 0 rmoveto
+} for
+1 cm 0 rmoveto
+1 cm 0 rlineto
+stroke
+
+% Draw Real Lines
+newpath
+0 setgray
+0.25 mm setlinewidth
+0 setlinejoin
+% Bottom Bracket
+BBcenter bottomBracketRadius 0 360 arc
+stroke
+%Draw Center Lines
+0 bottomBracketDrop neg moveto
+seatTubeTop lineto
+TTST lineto
+TTHT lineto
+headTubeBottom lineto
+lowerHeadsetCL moveto
+frontAxel lineto
+HTDT moveto
+BBcenter lineto
+stroke
+%Draw BSDs and Tires
+frontAxel frontBSR 0 360 arc
+stroke
+frontAxel frontWheelRadius 0 360 arc
+stroke
+chainStayIntersection rearBSR 0 360 arc
+stroke
+chainStayIntersection rearWheelRadius 0 360 arc
+stroke
+%Draw Wheel Clearance
+steerColumnAxisIntersection 180 headTubeAngle sub steerColumnLengthInWheel tireClearance add moveUpLine tickLength headTubeAngle centPerpLine
+%Draw Crown Thickness
+steerColumnAxisIntersection 180 headTubeAngle sub steerColumnLengthInWheel tireClearance forkCrownThickness add add moveUpLine tickLength headTubeAngle centPerpLine
+%Draw Crown Seat
+steerColumnAxisIntersection 180 headTubeAngle sub steerColumnLengthInWheel tireClearance forkCrownThickness add add crownSeat sub moveUpLine tickLength headTubeAngle centPerpLine
+%Draw Lower Headset
+/headsetAngle lowerHeadsetStack 2 div headTubeRadius atan def
+/headsetDrawRadius headTubeRadius dup mul lowerHeadsetStack 2 div dup mul add sqrt def 
+headTubeBottom lowerHeadsetCL midpoint
+headsetDrawRadius
+90 headTubeAngleN add headsetAngle sub
+90 headTubeAngleN add headsetAngle add
+arc
+stroke
+headTubeBottom lowerHeadsetCL midpoint
+headsetDrawRadius
+headTubeAngleN 90 sub headsetAngle sub
+headTubeAngleN 90 sub headsetAngle add
+arc
+stroke
+%Draw Chainstay
+BBcenter chainStayIntersection moveto lineto
+stroke
+% Draw fork tube
+frontAxel moveto
+steerColumnAxisIntersection 180 headTubeAngle sub 150 mm moveUpLine
+lowerHeadsetCL 24 inch arct
+lowerHeadsetCL lineto
+stroke
+
+% Find BB intersect with a tube
+/findBBintersect {
+    /tubeRadius exch def
+    tubeRadius
+    bottomBracketRadius
+    acos
+} def
+
+downTubeAngle
+downTubeRadius findBBintersect 
+sub
+/DTBBIntersectAngle exch def
+
+seatTubeAngleN
+seatTubeRadius findBBintersect
+add
+/STBBInterceptAngle exch def
+
+% Draw tube edges inside front triangle
+BBcenter seatTubeAngleN 90 sub seatTubeRadius moveUpLine
+seatTubeAngleN
+BBcenter 90 downTubeAngle add downTubeRadius moveUpLine
+downTubeAngle
+findIntersection
+/STDTinnerIntersecty exch def
+/STDTinnerIntersectx exch def
+/STDTinnerIntersect { STDTinnerIntersectx STDTinnerIntersecty } def
+TTST 90 seatTubeAngle sub seatTubeRadius moveUpLine
+seatTubeAngleN
+TTST 90 topTubeAngle add topTubeRadius neg moveUpLine
+topTubeAngle
+findIntersection
+/TTSTinnerIntersecty exch def
+/TTSTinnerIntersectx exch def
+/TTSTinnerIntersect { TTSTinnerIntersectx TTSTinnerIntersecty } def
+TTHT 90 topTubeAngle add topTubeRadius neg moveUpLine
+topTubeAngle
+TTHT 90 headTubeAngleN add headTubeRadius moveUpLine
+headTubeAngleN
+findIntersection
+/TTHTinnerIntersecty exch def
+/TTHTinnerIntersectx exch def
+/TTHTinnerIntersect { TTHTinnerIntersectx TTHTinnerIntersecty } def
+HTDT 90 downTubeAngle add downTubeRadius moveUpLine
+downTubeAngle
+HTDT headTubeAngleN 90 add headTubeRadius moveUpLine
+headTubeAngleN
+findIntersection
+/HTDTinnerIntersecty exch def
+/HTDTinnerIntersectx exch def
+/HTDTinnerIntersect { HTDTinnerIntersectx HTDTinnerIntersecty } def
+newpath
+lugged
+{
+    BBcenter
+    downTubeAngle downTubeRadius findBBintersect add
+    bottomBracketRadius moveUpLine
+    moveto
+}
+{
+    BBcenter
+    seatTubeAngleN seatTubeRadius findBBintersect sub
+    bottomBracketRadius moveUpLine
+    moveto
+
+} ifelse
+STDTinnerIntersect lineto
+stroke
+newpath
+STDTinnerIntersect moveto
+TTSTinnerIntersect lineto
+TTHTinnerIntersect lineto
+HTDTinnerIntersect lineto
+closepath
+stroke
+
+% Draw tube edges on the outside.
+TTST seatTubeAngleN 90 sub seatTubeRadius moveUpLine
+seatTubeAngleN
+TTST 90 topTubeAngle add topTubeRadius moveUpLine
+topTubeAngle
+findIntersection
+/TTSTouterIntersecty exch def
+/TTSTouterIntersectx exch def
+/TTSTouterIntersect { TTSTouterIntersectx TTSTouterIntersecty } def
+TTHT 90 topTubeAngle add topTubeRadius moveUpLine
+topTubeAngle
+TTHT 90 headTubeAngleN add headTubeRadius moveUpLine
+headTubeAngleN
+findIntersection
+/TTHTouterIntersecty exch def
+/TTHTouterIntersectx exch def
+/TTHTouterIntersect { TTHTouterIntersectx TTHTouterIntersecty } def
+/headTubeTopRear { TTHTouterIntersect headTubeAngleN headTubeTopTubeOffset moveUpLine } def
+/headTubeTopFront {headTubeTopRear headTubeAngleN 90 sub headTubeDiameter moveUpLine } def
+/headTubeBottomFront {headTubeBottom headTubeAngleN 90 sub headTubeRadius moveUpLine } def
+/headTubeBottomRear {headTubeBottom headTubeAngleN 90 add headTubeRadius moveUpLine } def
+/seatTubeTopRear { seatTubeTop seatTubeAngleN 90 add seatTubeRadius moveUpLine } def
+/seatTubeTopFront { seatTubeTop seatTubeAngleN 90 sub seatTubeRadius moveUpLine } def
+/DTBBintercept { BBcenter DTBBIntersectAngle bottomBracketRadius moveUpLine } def
+/STBBIntercept { BBcenter STBBInterceptAngle bottomBracketRadius moveUpLine } def
+gsave
+% Draw Standover Measure Point
+0 1 1 setrgbcolor
+TTSTouterIntersect TTHTouterIntersect midpoint 1 mm topTubeAngle neg centPerpLine
+stroke
+grestore
+newpath
+STBBIntercept moveto
+seatTubeTopRear lineto
+seatTubeTopFront lineto
+TTSTouterIntersect lineto
+TTHTouterIntersect lineto
+headTubeTopRear lineto
+headTubeTopFront lineto
+headTubeBottomFront lineto
+headTubeBottomRear lineto
+HTDTLowIntersect lineto
+DTBBintercept lineto
+stroke
+
+/orientLabel {
+    /angle exch def
+    /offset exch def
+    /y exch def
+    /x exch def
+    x y translate
+    angle rotate
+    0 offset moveto
+} def
+
+/centeredLabel {
+  /string exch def
+  gsave
+  orientLabel
+  string dup stringwidth pop
+  2 div
+  neg
+  0 rmoveto
+  show
+  stroke
+  grestore
+} def
+
+/centeredAngleLabel {
+  /string exch def
+  gsave
+  orientLabel
+  string dup stringwidth pop
+  2 div
+  neg
+  0 rmoveto
+  show
+  /degree glyphshow
+  stroke
+  grestore
+} def
+
+% Time to label!
+1 0 1 setrgbcolor
+/textSize 10 def
+/Helvetica textSize selectfont
+%This is from stack overflow
+/fontheight currentfont dup /FontBBox get dup 3 get
+    exch 1 get sub
+    exch /FontMatrix get 3 get mul
+def
+
+% Effective Top Tube
+topTubeAngle 0 ne {
+    eTTST TTHT midpoint
+    textOffset	
+    0
+    [ (Effective Top Tube Length )
+	effTopTubeLength intomm 1 nearestDecimal (       ) cvs
+	( mm)
+    ] concatstrings 
+    centeredLabel
+} if
+
+% Real Top Tube
+TTST TTHT midpoint
+textOffset
+topTubeAngle
+[ (Actual Top Tube Length ) 
+  actualTopTubeLength intomm 1 nearestDecimal (       ) cvs 
+  ( mm)
+] concatstrings
+centeredLabel
+ 
+% Seat Tube
+BBcenter seatTubeTop midpoint
+textOffset
+seatTubeAngleN
+[ (Seat Tube Length \(C-eC\) ) 
+  seatTubeLengthCC intomm 1 nearestDecimal (       ) cvs 
+  ( mm)
+] concatstrings
+centeredLabel
+BBcenter seatTubeTop midpoint
+fontheight neg
+seatTubeAngleN
+[ (Seat Tube Length \(C-T\) ) 
+  seatTubeLength intomm 1 nearestDecimal (       ) cvs 
+  ( mm / Seat Tube Length \(C-TT\) )
+  BBcenter TTST lengthBetweenPoints intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+% Head Tube
+headTubeBottom headTubeTop midpoint
+textOffset
+headTubeAngleN 180 add
+[ (Head Tube Length ) 
+  headTubeLength intomm 1 nearestDecimal (       ) cvs 
+  ( mm)
+] concatstrings
+centeredLabel
+
+% Down Tube
+BBcenter HTDT midpoint
+textOffset
+downTubeAngle
+[ (Down Tube Length ) 
+  downTubeLength intomm 1 nearestDecimal (       ) cvs 
+  ( mm)
+] concatstrings
+centeredLabel
+
+% Chainstay
+BBcenter chainStayIntersection midpoint
+textOffset
+chainStayIntersection BBcenter angleOfLineBetweenPoints
+[ (Chainstay Length )
+  chainStayLength intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+% BB Drop
+0 0 BBcenter midpoint
+textOffset
+90
+[ bottomBracketDrop intomm 1 nearestDecimal (      ) cvs
+ ( mm)
+] concatstrings
+centeredLabel
+
+% Standover Label
+TTSTouterIntersect TTHTouterIntersect midpoint
+textOffset
+topTubeAngle
+[ (Standover Height )
+  TTSTouterIntersect TTHTouterIntersect midpoint exch pop
+    frontWheelRadius add intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+% Fork direct length
+lowerHeadsetCL frontAxel midpoint
+textOffset
+lowerHeadsetCL frontAxel angleOfLineBetweenPoints
+[ (Fork Length )
+  lowerHeadsetCL frontAxel lengthBetweenPoints intomm
+  1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+
+centeredLabel
+stroke
+
+% TTST TTHT miter length
+TTSTinnerIntersect TTHTinnerIntersect midpoint
+textOffset
+topTubeAngle
+[ (Top Tube Mitre Length )
+  TTSTinnerIntersect TTHTinnerIntersect lengthBetweenPoints intomm
+  1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+stroke
+
+% Fork Rake
+forkRakeCorner frontAxel midpoint
+textOffset
+forkRakeCorner frontAxel angleOfLineBetweenPoints
+[ (Fork Rake )
+  forkRake intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+stroke
+
+% Seat Tube Diameter
+seatTubeTop
+textOffset
+seatTubeAngleN 90 sub
+[ (Seat Tube Diameter )
+  seatTubeDiameter intomm 1 nearestDecimal (     ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+stroke
+
+% Head Tube Diameter
+headTubeTop
+textOffset
+headTubeAngleN 90 sub
+[ (Head Tube Diameter )
+  headTubeDiameter intomm 1 nearestDecimal (     ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+stroke
+
+% Top Tube Diameter
+TTSTouterIntersect exch pop 0 exch
+textOffset
+0
+[ (Top Tube Diameter )
+  topTubeDiameter intomm 1 nearestDecimal (     ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+stroke
+
+% Fork Trail
+forkRakeCorner frontAxel midpoint
+fontheight neg
+forkRakeCorner frontAxel angleOfLineBetweenPoints
+[ (Trail )
+  forkTrail intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+stroke
+
+% Rear Dropout Chainstay Diagram print
+rearAxelChainstayD
+textOffset
+90
+[ (Rear Dropout Spacing )
+  rearDropoutSpacing intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+stroke
+
+% Rear Dropout Chainstay Diagram print
+BBchainstayD
+textOffset
+90
+[ (Bottom Bracket Width )
+  bottomBracketWidth intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+stroke
+
+/angleDrawRadius 1 inch def
+
+%HTDT Angle Label
+HTDTLowIntersect angleDrawRadius downTubeAngle 180 add headTubeAngleN 180 add arc
+stroke
+HTDTLowIntersect
+180 downTubeAngle add HTDTLugAngle 2 div add
+angleDrawRadius
+moveUpLine
+textOffset
+180 downTubeAngle add HTDTLugAngle 2 div add 90 add
+HTDTLugAngle 1 nearestDecimal (    ) cvs
+centeredAngleLabel
+stroke
+
+% TTHT Angle Label
+TTHTouterIntersect angleDrawRadius headTubeAngleN topTubeAngle 180 add arc
+stroke
+TTHTouterIntersect
+headTubeAngleN 180 topTubeAngle add add 2 div
+angleDrawRadius
+moveUpLine
+textOffset
+headTubeAngleN 180 topTubeAngle add add 2 div 90 sub
+headTubeAngle topTubeAngle add 1 nearestDecimal (    ) cvs
+centeredAngleLabel
+stroke
+
+% TTST Angle Label
+TTSTinnerIntersect angleDrawRadius seatTubeAngleN 180 add topTubeAngle arc
+stroke
+TTSTinnerIntersect
+seatTubeAngle neg topTubeAngle add 2 div 
+angleDrawRadius
+moveUpLine
+textOffset
+seatTubeAngle neg topTubeAngle add 2 div 90 add
+seatTubeAngle topTubeAngle add 1 nearestDecimal (    ) cvs
+centeredAngleLabel
+stroke
+
+% STDT Angle Label
+STDTinnerIntersect angleDrawRadius downTubeAngle seatTubeAngleN arc
+stroke
+STDTinnerIntersect
+seatTubeAngleN downTubeAngle add 2 div 
+angleDrawRadius
+moveUpLine
+textOffset
+seatTubeAngleN downTubeAngle add 2 div 90 sub
+seatTubeAngleN downTubeAngle sub 1 nearestDecimal (    ) cvs
+centeredAngleLabel
+stroke
+
+% CSSS Angle Label
+/CSSSAngle
+180
+BBcenter rearAxel angleOfLineBetweenPoints
+rearAxel TTST angleOfLineBetweenPoints sub
+sub  
+def
+
+rearAxel angleDrawRadius
+rearAxel BBcenter angleOfLineBetweenPoints 
+rearAxel TTST angleOfLineBetweenPoints
+arc
+stroke
+
+rearAxel
+CSSSAngle 2 div 180 BBcenter rearAxel angleOfLineBetweenPoints sub sub
+angleDrawRadius 
+moveUpLine
+textOffset
+CSSSAngle 2 div 180 BBcenter rearAxel angleOfLineBetweenPoints sub sub
+90 sub 
+CSSSAngle 1 nearestDecimal (    ) cvs
+centeredAngleLabel
+stroke
+
+
+% Front Wheel
+frontAxel frontBSR add 
+textOffset
+0
+[ (Bead Seat Diameter )
+  frontBSD intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+frontAxel frontWheelRadius add 
+textOffset
+0
+[ (Wheel Diameter )
+  frontWheelDiameter intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+% Rear Wheel
+chainStayIntersection rearBSR add 
+textOffset
+0
+[ (Bead Seat Diameter )
+  rearBSD intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+% Rear Wheel Diameter
+chainStayIntersection rearWheelRadius add 
+textOffset
+0
+[ (Wheel Diameter )
+  rearWheelDiameter intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+% Chainstay Diagram
+rearAxelChainstayD BBchainstayD midpoint
+textOffset
+0
+[ (Axel to Back of BB Length )
+  chainStayLength bottomBracketRadius sub intomm 1 nearestDecimal (     ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+% Chainstay Diagram Tire
+rearAxelChainstayD exch rearBSR rearTireWidth 2 div add add exch rearTireWidth 2 div add
+textOffset
+0
+[ (Tire Diameter )
+  rearTireWidth intomm 1 nearestDecimal (     ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+lugged {
+    % BB to eST height (for jig setup)
+    BBcenter BBcenter seatTubeLengthCC seatTubeAngleN sin mul add midpoint
+    textOffset
+    90
+    [ (Bottom Bracket to Effective Seat Tube Height )
+      seatTubeLengthCC seatTubeAngleN sin mul intomm 1 nearestDecimal (      ) cvs
+      ( mm)
+    ] concatstrings
+    centeredLabel
+    % bottom of down tube miter length (lugs)
+    downTubeMiterPoint HTDTLowIntersect midpoint
+    textOffset
+    downTubeAngle
+    [ (Bottom of Down Tube Miter Length )
+      downTubeMiterPoint HTDTLowIntersect lengthBetweenPoints intomm 1 nearestDecimal (      ) cvs
+      ( mm)
+    ] concatstrings
+    centeredLabel
+}
+{ % NOT LUGGED
+    % BB to head tube bottom (for jig setup)
+    headTubeBottom pop bottomBracketDrop neg
+    headTubeBottom midpoint
+    textOffset
+    90
+    [ (Bottom Bracket to Bottom of Head Tube Height )
+      bottomBracketDrop headTubeBottom exch pop add intomm 1 nearestDecimal (      ) cvs
+      ( mm)
+    ] concatstrings
+    centeredLabel
+
+    % top of down tube miter length (lugless)
+    STDTinnerIntersect HTDTinnerIntersect midpoint
+    textOffset
+    downTubeAngle
+    [ (Top of Down Tube Miter Length  )
+      STDTinnerIntersect HTDTinnerIntersect lengthBetweenPoints intomm 1 nearestDecimal (      ) cvs
+      ( mm)
+    ] concatstrings
+    centeredLabel
+
+} ifelse
+
+% seat tube miter length
+STDTinnerIntersect seatTubeTopFront midpoint
+textOffset
+seatTubeAngleN
+[ (Seat Tube Miter Length )
+  seatTubeLengthCC bottomBracketRadius sub intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+BBcenter bottomBracketRadius sub
+fontheight neg
+0
+[ (Bottom Bracket Diameter )
+  bottomBracketDiameter intomm 1 nearestDecimal (     ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+BBcenter bottomBracketRadius sub
+fontheight 2 mul neg
+0
+[ (Down Tube Diameter )
+  downTubeDiameter intomm 1 nearestDecimal (     ) cvs
+  ( mm)
+] concatstrings
+centeredLabel
+
+%Draw Wheel Clearance
+gsave
+steerColumnAxisIntersection headTubeAngleN steerColumnLengthInWheel tireClearance add fontheight 2 div sub moveUpLine
+headTubeAngleN 90 sub tickLength textOffset add moveUpLine
+1 index 1 index
+translate
+[ (Tire Clearance )
+  tireClearance intomm 1 nearestDecimal (     ) cvs
+  ( mm)
+] concatstrings
+headTubeAngleN 90 sub rotate
+0 0 moveto
+show
+stroke
+grestore
+%Draw Crown Thickness
+gsave
+steerColumnAxisIntersection headTubeAngleN steerColumnLengthInWheel tireClearance add forkCrownThickness add fontheight 2 div sub moveUpLine
+headTubeAngleN 90 sub tickLength textOffset add moveUpLine
+1 index 1 index
+translate
+[ (Crown Thickness )
+  forkCrownThickness intomm 1 nearestDecimal (     ) cvs
+  ( mm)
+] concatstrings
+headTubeAngleN 90 sub rotate
+0 0 moveto
+show
+stroke
+grestore
+%Draw Crown Seat
+gsave
+steerColumnAxisIntersection headTubeAngleN steerColumnLengthInWheel tireClearance add forkCrownThickness add crownSeat sub fontheight 2 div sub moveUpLine
+headTubeAngleN 90 sub tickLength textOffset add moveUpLine
+1 index 1 index
+translate
+[ (Crown Seat )
+  crownSeat intomm 1 nearestDecimal (     ) cvs
+  ( mm)
+] concatstrings
+headTubeAngleN 90 sub rotate
+0 0 moveto
+show
+stroke
+grestore
+% Label Lower Headset Stack thickness
+gsave
+headTubeBottom
+headTubeAngleN 90 sub headTubeRadius textOffset add moveUpLine
+1 index 1 index
+translate
+[ (Lower Headset Stack )
+  lowerHeadsetStack intomm 1 nearestDecimal (     ) cvs
+  ( mm)
+] concatstrings
+headTubeAngleN 90 sub rotate
+0 0 moveto
+show
+stroke
+grestore
+% Label Rear Tire Clearance
+gsave
+chainStayIntersection seatTubeAngleN 90 sub seatTubeTopRear seatTubeAngleN findIntersection
+seatTubeAngleN 90 add textOffset moveUpLine
+1 index 1 index 
+translate
+[ (Rear Tire Clearance )
+  chainStayIntersection seatTubeAngleN 90 sub seatTubeTopRear seatTubeAngleN findIntersection
+  chainStayIntersection lengthBetweenPoints rearWheelRadius sub intomm 1 nearestDecimal (      ) cvs
+  ( mm)
+] concatstrings
+seatTubeAngleN rotate
+0 0 moveto
+show
+stroke
+grestore
+
+% Miter contours
+
+% This function draws where to cut on the outside of the pipe if
+% you're cutting perpendicular to the pipe
+/miterFunction {
+  6 dict
+  begin
+  /miterAngle exch 90 exch sub def
+  /angle exch def
+  /radiusThrough exch def
+  /radiusCut exch def
+  /innerRadiusCut radiusCut tubeEndWidth sub def
+  radiusThrough dup mul
+  innerRadiusCut dup mul sub radiusCut angle cos mul dup mul add
+  sqrt
+  miterAngle sin div
+  radiusCut angle cos mul 90 miterAngle sub tan mul sub  
+  end
+} def
+
+% This function draws where to cut on the outside of the pipe if
+% you can contour the miter to match the uncut pipe exactly.
+/miterFunctionClean {
+  6 dict
+  begin
+  /miterAngle exch 90 exch sub def
+  /angle exch def
+  /radiusThrough exch def
+  /radiusCut exch def
+  radiusThrough dup mul
+  radiusCut angle sin mul dup mul sub
+  sqrt
+  miterAngle sin div
+  radiusCut angle cos mul 90 miterAngle sub tan mul sub  
+  end
+} def
+
+/miterContour {
+    /radiusCut exch def
+    /radiusThrough exch def
+    /miterAngle exch def
+    /y exch def
+    /x exch def
+    gsave
+    newpath
+    0 setgray
+    x y translate
+    2 pi mul radiusCut mul 360 div 1 scale
+    0.25 setlinewidth
+    1 setlinejoin
+    0 1 360 {
+	/angle exch def
+	radiusCut radiusThrough angle miterAngle miterFunctionClean
+	angle exch angle 0 eq { moveto } { lineto } ifelse
+    } for
+    0 1 360 {
+	/angle exch def
+	radiusCut radiusCut angle miterAngle miterFunctionClean
+	angle exch angle 0 eq { moveto } { lineto } ifelse
+    } for
+    stroke
+    grestore
+} def
+
+/miterContourOnPipe {
+    /radiusCut exch def
+    /radiusThrough exch def
+    /miterAngle exch def
+    gsave
+    newpath
+    0 setgray
+    0.25 mm setlinewidth
+    1 setlinejoin
+    0 1 180 {
+	/angle exch def
+	radiusCut radiusThrough angle miterAngle miterFunctionClean
+	radiusCut angle cos mul exch angle 0 eq { moveto } { lineto } ifelse
+    } for
+    stroke
+    newpath
+    [2 mm 1 mm] 0 setdash
+    0 1 180 {
+	/angle exch def
+	radiusCut tubeEndWidth sub radiusThrough angle miterAngle miterFunctionClean
+	radiusCut tubeEndWidth sub angle cos mul exch angle 0 eq { moveto } { lineto } ifelse
+    } for
+    stroke
+    grestore
+} def
+
+% I am saving the contours on the page until I have a good place to use them.
+%100 mm 0 90 seatTubeAngle topTubeAngle add sub seatTubeRadius topTubeRadius miterContour
+%300 mm 0 90 headTubeAngle topTubeAngle add sub headTubeRadius topTubeRadius miterContour
+%500 mm 0 90 HTDTLugAngle sub headTubeRadius downTubeRadius miterContour
+
+gsave
+HTDT translate
+downTubeAngle 90 add rotate
+90 HTDTLugAngle sub headTubeRadius downTubeRadius miterContourOnPipe
+grestore
+
+gsave
+TTHT translate
+topTubeAngle 90 add rotate
+90 headTubeAngleN topTubeAngle sub sub headTubeRadius topTubeRadius miterContourOnPipe
+grestore
+
+gsave
+TTST translate
+topTubeAngle 90 sub rotate
+90 seatTubeAngleN topTubeAngle sub sub seatTubeRadius topTubeRadius miterContourOnPipe
+grestore
+
+%THIS SHOULD BE THE LAST LINE
+copypage

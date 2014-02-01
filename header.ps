@@ -1,0 +1,30 @@
+%!PS-Adobe-3.0
+%%Pages: 1
+%%Orientation: Landscape
+%%DocumentMedia: a0
+%%Pages: 1
+%%EndComments
+%%EndProlog
+%%BeginSetup
+ << /PageSize [2384 3370] /Orientation 3 >> setpagedevice
+%%EndSetup
+%%Page: 1 1
+%%BeginPageSetup
+ 90 rotate 0 -2384 translate
+%%EndPageSetup
+
+% Mitering equation is based on http://metalgeek.com/static/dan/derivation.html
+% Well, ok, I happened to derive eq 6 on my own, but I'm using equation 9.
+% It's good that I got the same answer. That's how math works.
+
+% This might be important
+/pi 3.1415926 def
+
+% Units
+/inch { 72 mul } def
+/cm { inch 2.54 div } def
+/mm { cm 10 div } def
+/intomm { 10 mul 2.54 mul 72 div } def
+/intocm { 2.54 mul 72 div } def
+/intoinches { 72 div } def
+/printmm { intomm = } def
